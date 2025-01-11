@@ -1,18 +1,20 @@
 package jhttp;
 
-import jhttp.route.Route;
+import jhttp.logger.*;
+import jhttp.route.*;
 
 import java.util.*;
 import java.net.*;
 import java.io.*;
 
 public class JHttpServer {
+    Logger logger = new Logger();
     ServerSocket servSocket;
     Socket cliSocket;
     Map<String, Route> routeMap;
 
     public JHttpServer() {
-        this.routeMap = new HashMap<>();
+        routeMap = new HashMap<>();
     }
 
     public boolean exist(String path) {
@@ -20,7 +22,9 @@ public class JHttpServer {
     }
 
     public void sign(String path, Route route) {
-        routeMap.put(path, route);
+        if (exist(path)) {
+            routeMap.put(path, route);
+        }
     }
 
     public void run(String addr, int port) throws IOException {
@@ -28,10 +32,11 @@ public class JHttpServer {
         servSocket = new ServerSocket(port, 128, InetAddress.getByName(addr));
         while (true) {
             cliSocket = servSocket.accept();
-            System.out.println("find 1user!");
+            logger.log(LogType.INFO, "find 1 user");
             new Thread(() -> {
                 try {
-                    this.userSession(cliSocket.getInputStream(), cliSocket.getOutputStream();
+                    userSession(cliSocket.getInputStream(), cliSocket.getOutputStream());
+                    cliSocket.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -39,7 +44,14 @@ public class JHttpServer {
         }
     }
 
-    private void userSession(InputStream istreamCli, OutputStream ostreamCli){
-
+    private void userSession(InputStream istreamCli, OutputStream ostreamCli) throws IOException {
+        try {
+            ostreamCli.write("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nHelloWorlds!".getBytes());
+            ostreamCli.flush();
+            logger.log(LogType.INFO,"HTTP/1.0 200 OK!");
+        }catch (Exception e){
+            e.printStackTrace();
+            logger.log(LogType.ERROR,"HTTP/1.0 500 Internal Server Error!");
+        }
     }
 }
