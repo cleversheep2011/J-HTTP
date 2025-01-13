@@ -1,6 +1,6 @@
-package jhttp.route;
+package flock.route;
 
-import jhttp.JHttpRequest;
+import flock.JHttpRequest;
 
 public interface Route {
     public byte[] handle(JHttpRequest request);

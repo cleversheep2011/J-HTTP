@@ -1,4 +1,4 @@
-package jhttp.logger;
+package flock.logger;
 
 public enum LogType {
     ERROR,

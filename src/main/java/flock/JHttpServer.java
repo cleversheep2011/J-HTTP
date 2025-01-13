@@ -1,8 +1,7 @@
-package jhttp;
+package flock;
 
-import jhttp.logger.*;
-import jhttp.route.*;
-import jhttp.JHttpRequest;
+import flock.logger.*;
+import flock.route.*;
 
 import java.util.*;
 import java.net.*;
@@ -33,32 +32,41 @@ public class JHttpServer {
         servSocket = new ServerSocket(port, 128, InetAddress.getByName(addr));
         while (true) {
             cliSocket = servSocket.accept();
-            new Thread(() -> userSession(cliSocket));
+            new Thread(() -> userSession(cliSocket)).start();
         }
     }
 
-    private void userSession(Socket cliSocket){
+    private void userSession(Socket cliSocket) {
         DataInputStream istreamCli;
         DataOutputStream ostreamCli;
+        JHttpRequest request;
         try {
             istreamCli = new DataInputStream(cliSocket.getInputStream());
             ostreamCli = new DataOutputStream(cliSocket.getOutputStream());
-        }catch (IOException e){
+        } catch (IOException e) {
+            e.printStackTrace();
             return;
         }
         try {
-            System.out.println(new String(istreamCli.readAllBytes()));
-            ostreamCli.write("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nHelloWorlds!".getBytes());
+            ostreamCli.write("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n".getBytes());
+//            request = new JHttpRequest(new String(istreamCli.readAllBytes()));
+//            ostreamCli.write(routeMap.get(request.path).handle(request));
+//            ostreamCli.write("HelloWorld".getBytes());
             ostreamCli.flush();
             cliSocket.close();
-            logger.log(LogType.INFO,"HTTP/1.0 200 OK!");
-        }catch (Exception e1){
-            try{
-                ostreamCli.write("HTTP/1.1 500 Internal Server Error\r\n\r\n".getBytes());
-            }catch (IOException e2){
-                e2.printStackTrace();
+            logger.log(LogType.INFO, "HTTP/1.1 200 OK!");
+        } catch (NullPointerException nE) {
+            try {
+                ostreamCli.write("HTTP/1.1 404 Not Found\r\n\r\n".getBytes());
+            } catch (IOException ignored) {
             }
-            logger.log(LogType.ERROR,"HTTP/1.0 500 Internal Server Error!");
+            logger.log(LogType.INFO, "HTTP/1.1 404 Not Found!");
+        } catch (Exception e) {
+            try {
+                ostreamCli.write("HTTP/1.1 500 Internal Server Error\r\n\r\n".getBytes());
+            } catch (IOException ignored) {
+            }
+            logger.log(LogType.ERROR, "HTTP/1.1 500 Internal Server Error!");
         }
     }
 }
